@@ -358,18 +358,6 @@ export type Database = {
         }
         Relationships: []
       }
-      probe_xyz: {
-        Row: {
-          id: string
-        }
-        Insert: {
-          id: string
-        }
-        Update: {
-          id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           alert_email: boolean
