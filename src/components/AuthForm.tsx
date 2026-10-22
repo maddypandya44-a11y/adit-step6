@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +18,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     e.preventDefault();
     setBusy(true);
     if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/dashboard` } });
+      const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/dashboard` } });
       setBusy(false);
       if (error) { toast.error(error.message); return; }
+      // Email sign-ups are auto-confirmed: a session means the user is in.
+      if (data.session) { navigate({ to: "/dashboard" }); return; }
       setSent(true);
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -31,11 +32,17 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     }
   }
 
+  // Standard Supabase OAuth: click, pick a Google account, land back on
+  // /dashboard. No broker, no approval screen.
   async function google() {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (r.error) { toast.error(r.error.message ?? "Google sign-in failed"); return; }
-    if (r.redirected) return;
-    navigate({ to: "/dashboard" });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    if (error) {
+      const unconfigured = /provider/i.test(error.message) || /not enabled/i.test(error.message) || /invalid/i.test(error.message);
+      toast.error(unconfigured ? "Google sign-in isn't configured yet — use email and password for now." : error.message);
+    }
   }
 
   return (

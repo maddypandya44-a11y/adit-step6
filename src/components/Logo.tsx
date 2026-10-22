@@ -13,7 +13,7 @@ export function Logo({ size = 34, full = true }: { size?: number; full?: boolean
         alt="ADIT Career Bridge logo"
         width={size}
         height={size}
-        className="rounded-md bg-white ring-1 ring-border/60 object-cover shrink-0"
+        className="rounded-md bg-black p-0.5 ring-1 ring-border/60 object-cover shrink-0"
         style={{ width: size, height: size }}
       />
       {full && (
